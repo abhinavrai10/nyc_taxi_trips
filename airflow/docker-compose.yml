@@ -45,7 +45,7 @@ services:
 
   airflow-scheduler:
     <<: *airflow-common
-    command: scheduler
+    command:  bash -c "airflow db upgrade && exec airflow scheduler"
     depends_on:
       postgres:
         condition: service_healthy
