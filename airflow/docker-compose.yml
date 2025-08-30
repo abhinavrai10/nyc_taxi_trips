@@ -6,12 +6,14 @@ x-airflow-common: &airflow-common
     - AIRFLOW__CORE__LOAD_EXAMPLES=false
     - _AIRFLOW_WWW_USER_USERNAME=admin
     - _AIRFLOW_WWW_USER_PASSWORD=admin
+    - AIRFLOW_UID=${AIRFLOW_UID:-50000}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
   networks:
     - airflow-network
+  user: "${AIRFLOW_UID:-50000}:0"
 
 services:
   postgres:
