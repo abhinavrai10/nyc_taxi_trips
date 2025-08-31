@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.amazon.aws.operators.glue import AwsGlueJobOperator
-from airflow.providers.amazon.aws.operators.glue_crawler import AwsGlueCrawlerOperator
+from airflow.providers.amazon.aws.operators.glue import GlueJobOperator
+from airflow.providers.amazon.aws.operators.glue_crawler import GlueCrawlerOperator
 
 # Configurations
 BUCKET = "lakehouse-nyc-taxi"
@@ -47,14 +47,14 @@ with DAG(
     )
 
     # 2. Run Bronze Crawler
-    # run_bronze_crawler = AwsGlueCrawlerOperator(
+    # run_bronze_crawler = GlueCrawlerOperator(
     #     task_id="run_bronze_crawler",
     #     config={"Name": BRONZE_CRAWLER},
     #     aws_conn_id="aws_default",
     # )
 
     # 3. Run Silver ETL
-    run_silver_etl = AwsGlueJobOperator(
+    run_silver_etl = GlueJobOperator(
         task_id="run_silver_etl",
         job_name=SILVER_JOB_NAME,
         script_args={
@@ -68,14 +68,14 @@ with DAG(
     )
 
     # 4. Run Silver Crawler
-    # run_silver_crawler = AwsGlueCrawlerOperator(
+    # run_silver_crawler = GlueCrawlerOperator(
     #     task_id="run_silver_crawler",
     #     config={"Name": SILVER_CRAWLER},
     #     aws_conn_id="aws_default",
     # )
 
     # 5. Run Gold ETL (incremental)
-    run_gold_etl = AwsGlueJobOperator(
+    run_gold_etl = GlueJobOperator(
         task_id="run_gold_etl",
         job_name=GOLD_JOB_NAME,
         script_args={"--JOB_NAME": GOLD_JOB_NAME},
@@ -85,7 +85,7 @@ with DAG(
     )
 
     # 6. Run Gold Crawler
-    # run_gold_crawler = AwsGlueCrawlerOperator(
+    # run_gold_crawler = GlueCrawlerOperator(
     #     task_id="run_gold_crawler",
     #     config={"Name": GOLD_CRAWLER},
     #     aws_conn_id="aws_default",
