@@ -6,8 +6,8 @@ from airflow.providers.amazon.aws.operators.glue_crawler import GlueCrawlerOpera
 
 # Configurations
 BUCKET = "lakehouse-nyc-taxi"
-SILVER_JOB_NAME = "SilverETLJob"
-GOLD_JOB_NAME = "GoldETLJob"
+SILVER_JOB_NAME = "job_silver"
+GOLD_JOB_NAME = "job_gold"
 BRONZE_CRAWLER = "NYCTaxiBronzeCrawler"
 SILVER_CRAWLER = "NYCTaxiSilverCrawler"
 GOLD_CRAWLER = "NYCTaxiGoldCrawler"
