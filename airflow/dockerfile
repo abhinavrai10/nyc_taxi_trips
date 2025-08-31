@@ -6,4 +6,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 USER airflow   
-RUN pip install apache-airflow-providers-postgres
+RUN pip install apache-airflow-providers-postgres apache-airflow-providers-amazon==7.2.0
