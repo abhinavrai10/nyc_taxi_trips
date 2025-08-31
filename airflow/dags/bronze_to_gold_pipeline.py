@@ -23,9 +23,11 @@ default_args = {
 
 def validate_conf(**context):
     conf = context.get("dag_run").conf or {}
-    if "year" not in conf or "month" not in conf:
+    year = conf.get('year', '2019')  # Default value
+    month = conf.get('month', '01')  # Default value
+    if not year or not month:
         raise ValueError("Missing required parameters: year/month")
-    print(f"Triggered for Year: {conf['year']}, Month: {conf['month']}")
+    print(f"Triggered for Year: {year}, Month: {month}")
     return conf
 
 with DAG(
@@ -62,6 +64,8 @@ with DAG(
             "--month": "{{ dag_run.conf['month'] }}",
             "--JOB_NAME": SILVER_JOB_NAME,
         },
+        s3_bucket="aws-glue-assets-588297155433-us-east-1", 
+        script_location="s3://aws-glue-assets-588297155433-us-east-1/scripts/job_silver.py",  
         aws_conn_id="aws_default",
         region_name="us-east-1",
         wait_for_completion=True,
@@ -79,6 +83,8 @@ with DAG(
         task_id="run_gold_etl",
         job_name=GOLD_JOB_NAME,
         script_args={"--JOB_NAME": GOLD_JOB_NAME},
+        s3_bucket="aws-glue-assets-588297155433-us-east-1", 
+        script_location="s3://aws-glue-assets-588297155433-us-east-1/scripts/job_gold.py",
         aws_conn_id="aws_default",
         region_name="us-east-1",
         wait_for_completion=True,
