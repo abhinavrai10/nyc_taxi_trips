@@ -87,7 +87,6 @@ with DAG(
             },
             "Role": "arn:aws:iam::588297155433:role/GlueNYCTaxiRole"
         },
-        update_config=True,
     )
 
     # 4. Run Silver Crawler
@@ -125,7 +124,6 @@ with DAG(
             },
             "Role": "arn:aws:iam::588297155433:role/GlueNYCTaxiRole"
         },
-        update_config=True,
     )
 
     # 6. Run Gold Crawler
