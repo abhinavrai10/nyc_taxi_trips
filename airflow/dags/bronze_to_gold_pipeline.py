@@ -71,6 +71,23 @@ with DAG(
         aws_conn_id="aws_default",
         region_name="us-east-1",
         wait_for_completion=True,
+        create_job_kwargs={
+            "GlueVersion": "5.0",  # Enforce Glue 5.0
+            "WorkerType": "G.1X",
+            "NumberOfWorkers": 2,
+            "ExecutionProperty": {"MaxConcurrentRuns": 1},
+            "Command": {
+                "Name": "glueetl",
+                "ScriptLocation": "s3://aws-glue-assets-588297155433-us-east-1/scripts/job_silver.py",
+                "PythonVersion": "3"
+            },
+            "DefaultArguments": {
+                "--enable-job-insights": "false",
+                "--job-language": "python"
+            },
+            "Role": "arn:aws:iam::588297155433:role/GlueNYCTaxiRole"
+        },
+        update_config=True,
     )
 
     # 4. Run Silver Crawler
@@ -92,6 +109,23 @@ with DAG(
         aws_conn_id="aws_default",
         region_name="us-east-1",
         wait_for_completion=True,
+        create_job_kwargs={
+            "GlueVersion": "5.0",  # Enforce Glue 5.0
+            "WorkerType": "G.1X",
+            "NumberOfWorkers": 2,
+            "ExecutionProperty": {"MaxConcurrentRuns": 1},
+            "Command": {
+                "Name": "glueetl",
+                "ScriptLocation": "s3://aws-glue-assets-588297155433-us-east-1/scripts/job_gold.py",
+                "PythonVersion": "3"
+            },
+            "DefaultArguments": {
+                "--enable-job-insights": "false",
+                "--job-language": "python"
+            },
+            "Role": "arn:aws:iam::588297155433:role/GlueNYCTaxiRole"
+        },
+        update_config=True,
     )
 
     # 6. Run Gold Crawler
@@ -102,5 +136,5 @@ with DAG(
         region_name="us-east-1",
     )
 
-    validate_params >> run_bronze_crawler >> run_silver_etl >> run_silver_crawler >> run_gold_etl >> run_gold_crawler
+    validate_params >> run_silver_etl >> run_silver_crawler >> run_gold_etl >> run_gold_crawler
     # validate_params >> run_silver_etl  >> run_gold_etl 
