@@ -53,6 +53,7 @@ with DAG(
         task_id="run_bronze_crawler",
         config={"Name": BRONZE_CRAWLER},
         aws_conn_id="aws_default",
+        region_name="us-east-1",
     )
 
     # 3. Run Silver ETL
@@ -77,6 +78,7 @@ with DAG(
         task_id="run_silver_crawler",
         config={"Name": SILVER_CRAWLER},
         aws_conn_id="aws_default",
+        region_name="us-east-1",
     )
 
     # 5. Run Gold ETL (incremental)
@@ -97,6 +99,7 @@ with DAG(
         task_id="run_gold_crawler",
         config={"Name": GOLD_CRAWLER},
         aws_conn_id="aws_default",
+        region_name="us-east-1",
     )
 
     validate_params >> run_bronze_crawler >> run_silver_etl >> run_silver_crawler >> run_gold_etl >> run_gold_crawler
