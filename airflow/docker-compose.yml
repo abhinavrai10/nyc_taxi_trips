@@ -11,9 +11,9 @@ x-airflow-common: &airflow-common
     - AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL=10
 
   volumes:
-    - ./dags:/opt/airflow/nyc_taxi_trips/airflow/dags
-    - ./logs:/opt/airflow/nyc_taxi_trips/airflow/logs
-    - ./plugins:/opt/airflow/nyc_taxi_trips/airflow/plugins
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
   networks:
     - airflow-network
   user: "${AIRFLOW_UID:-50000}:0"
