@@ -11,4 +11,4 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .env
-ec2_aiflow.pem
+ec2_airflow.pem
