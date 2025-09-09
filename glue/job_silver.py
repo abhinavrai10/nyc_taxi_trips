@@ -8,6 +8,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.window import Window
 from pyspark.sql import functions as F
 import re
+import calendar
 
 # Initialize Spark and Glue contexts
 sc = SparkContext.getOrCreate()
@@ -17,8 +18,8 @@ job = Job(glueContext)
 
 # Parse input arguments
 args = getResolvedOptions(sys.argv, ['JOB_NAME', 'year', 'month'])
-year = int(args['year'])
-month = int(args['month'])
+year = str(args['year'])
+month = str(args['month'])
 
 # Load data from Glue Data Catalog
 dyf = glueContext.create_dynamic_frame.from_catalog(
@@ -32,16 +33,7 @@ df = df.drop("partition_0", "partition_1", "VendorID", "store_and_fwd_flag")
 df.printSchema()
 
 def normalize_column_names(df: DataFrame) -> DataFrame:
-    """
-    Normalize column names in a PySpark DataFrame to lowercase snake_case
-    with specific mappings for NYC taxi datasets.
-
-    Args:
-        df (DataFrame): Input Spark DataFrame.
-
-    Returns:
-        DataFrame: DataFrame with normalized column names.
-    """
+    """Normalize column names in a PySpark DataFrame to lowercase snake_case with specific mappings for NYC taxi datasets."""
     rename_map = {
         "tpep_pickup_datetime": "pickup_datetime",
         "tpep_dropoff_datetime": "dropoff_datetime",
@@ -57,16 +49,30 @@ def normalize_column_names(df: DataFrame) -> DataFrame:
         s2 = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1)
         return s2.lower()
 
+    # Convert input column names to lowercase for case-insensitive matching
+    input_columns = {col.lower(): col for col in df.columns}
     df_out = df
-    for col in df.columns:
-        if col in rename_map:
-            new_col = rename_map[col]
-        else:
+    
+    # Apply renaming from rename_map with case-insensitive matching
+    for src_col, dst_col in rename_map.items():
+        found = False
+        for input_col_lower, input_col_orig in input_columns.items():
+            if src_col.lower() == input_col_lower:
+                df_out = df_out.withColumnRenamed(input_col_orig, dst_col)
+                found = True
+                break
+        if not found:
+            print(f"Warning: Column '{src_col}' not found in DataFrame")
+
+    # Normalize remaining columns to snake_case
+    for col in df_out.columns:
+        if col not in rename_map.values():  # Skip already renamed columns
             new_col = to_snake_case(col)
-        if col != new_col:
-            df_out = df_out.withColumnRenamed(col, new_col)
+            if col != new_col:
+                df_out = df_out.withColumnRenamed(col, new_col)
 
     return df_out
+
 
 # Normalize column names
 df_normalized = normalize_column_names(df)

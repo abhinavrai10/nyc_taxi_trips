@@ -3,77 +3,77 @@ import boto3
 import os
 from botocore.exceptions import ClientError
 
+# Airflow API endpoint (replace <your-ec2-ip-or-dns> with actual EC2 IP or DNS)
+AIRFLOW_API_URL = "http://44.204.10.237:8080//api/v1/dags/bronze_to_gold_pipeline/dagRuns"
+
+def trigger_airflow_dag(year, month, file_key, username, password):
+    payload = {
+        "conf": {
+            "year": year,
+            "month": month,
+            "file_key": file_key
+        }
+    }
+    response = requests.post(
+    AIRFLOW_API_URL,
+    auth=(username, password),
+    json=payload,
+    headers={"Content-Type": "application/json"}
+    )
+    print(f"API Response Status: {response.status_code}")
+    print(f"API Response Body: {response.text}")
+    if response.status_code not in (200, 201, 202):
+        raise Exception(f"Failed to trigger Airflow DAG: {response.text}")
+
 def lambda_handler(event, context):
+    # Retrieve credentials from environment variables
+    airflow_username = os.environ.get('AIRFLOW_USERNAME')
+    airflow_password = os.environ.get('AIRFLOW_PASSWORD')
+    
+    # Validate environment variables
+    if not airflow_username or not airflow_password:
+        print("Missing AIRFLOW_USERNAME or AIRFLOW_PASSWORD environment variables")
+        return {
+            "statusCode": 500,
+            "body": "Missing Airflow credentials in environment variables"
+        }
+
     # Define constants
     url = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2019-01.parquet"
     bucket = "lakehouse-nyc-taxi"
-    
-    # Extract file name from URL
-    file_name = os.path.basename(url)  # e.g., yellow_tripdata_2019-01.parquet
-    
-    # Parse year and month from file name (assuming format: yellow_tripdata_YYYY-MM.parquet)
+
+    # Extract file name and partition
+    file_name = os.path.basename(url)
     try:
         year_month = file_name.split('_')[-1].replace('.parquet', '')  # e.g., 2019-01
         year, month = year_month.split('-')  # e.g., 2019, 01
     except (IndexError, ValueError) as e:
-        print(f"Error parsing year and month from file name {file_name}: {e}")
-        return {
-            'statusCode': 500,
-            'body': f"Failed to parse year and month from file name: {str(e)}"
-        }
-    
-    # Construct s3_key dynamically, keeping month as two-digit number
+        print(f"Error parsing year and month from {file_name}: {e}")
+        return {"statusCode": 500, "body": f"Failed to parse year/month: {str(e)}"}
+
+    # S3 key for Bronze layer
     s3_key = f"bronze/yellow_taxi/{year}/{month}/{file_name}"
-    
-    # Initialize S3 client
-    s3_client = boto3.client('s3')
-    
+
+    # Download file
+    print(f"Downloading {url}")
+    response = requests.get(url, stream=True)
     try:
-        # Download file from URL
-        print(f"Downloading file from {url}")
-        response = requests.get(url, stream=True)
-        
-        # Check HTTP status
-        try:
-            response.raise_for_status()  # Raises exception for 4xx/5xx errors
-        except requests.exceptions.HTTPError as http_err:
-            print(f"HTTP error occurred: {http_err}")
-            return {
-                'statusCode': 500,
-                'body': f"Failed to download file: {str(http_err)}"
-            }
-        
-        # Upload file to S3
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as http_err:
+        return {"statusCode": 500, "body": f"Download failed: {str(http_err)}"}
+
+    # Upload to S3
+    s3_client = boto3.client('s3')
+    try:
         print(f"Uploading to s3://{bucket}/{s3_key}")
-        try:
-            s3_client.upload_fileobj(
-                Fileobj=response.raw,
-                Bucket=bucket,
-                Key=s3_key
-            )
-            print(f"Successfully uploaded {s3_key} to {bucket}")
-            return {
-                'statusCode': 200,
-                'body': f"Successfully uploaded {s3_key} to {bucket}"
-            }
-        except ClientError as s3_err:
-            print(f"S3 error occurred: {s3_err}")
-            return {
-                'statusCode': 500,
-                'body': f"Failed to upload to S3: {str(s3_err)}"
-            }
-        
-    except requests.exceptions.RequestException as req_err:
-        # Catch network issues, timeouts, etc.
-        print(f"Request error occurred: {req_err}")
-        return {
-            'statusCode': 500,
-            'body': f"Failed to download file: {str(req_err)}"
-        }
-    except Exception as e:
-        # Catch any other unexpected errors
-        print(f"Unexpected error occurred: {e}")
-        return {
-            'statusCode': 500,
-            'body': f"Unexpected error: {str(e)}"
-        }
+        s3_client.upload_fileobj(Fileobj=response.raw, Bucket=bucket, Key=s3_key)
+    except ClientError as s3_err:
+        return {"statusCode": 500, "body": f"S3 upload failed: {str(s3_err)}"}
+
+    # Trigger Airflow DAG
+    try:
+        trigger_airflow_dag(year, month, s3_key, airflow_username, airflow_password)
+    except Exception as dag_err:
+        return {"statusCode": 500, "body": f"Airflow trigger failed: {str(dag_err)}"}
+
+    return {"statusCode": 200, "body": f"Successfully processed {s3_key}"}
