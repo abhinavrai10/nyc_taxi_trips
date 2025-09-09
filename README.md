@@ -1,13 +1,15 @@
 # Index
 
--   NYC Taxi Data Pipeline Overview
--   Problem Statement
--   Approach
--   Architecture
--   Prerequisites
--   Setup
--   Procedure to Run the Pipeline
--   License
+# Index
+
+1. [NYC Taxi Data Pipeline Overview](#nyc-taxi-data-pipeline-overview)
+2. [Problem Statement](#problem-statement)
+3. [Approach](#approach)
+4. [Architecture](#architecture)
+5. [Prerequisites](#prerequisites)
+6. [Setup](#setup)
+7. [Procedure to Run the Pipeline](#procedure-to-run-the-pipeline)
+8. [License](#license)
 
 ## NYC Taxi Data Pipeline Overview
 
