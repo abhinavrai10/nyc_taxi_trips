@@ -49,8 +49,7 @@ pipeline:
 
 -   **Lambda Trigger:** An AWS Lambda function (`lambda_function.py`)
     downloads raw NYC Taxi data (Parquet files) from a public source,
-    uploads it to `s3://lakehouse-nyc-taxi/bronze/`, and triggers an
-    Airflow DAG.
+    uploads it to `s3://lakehouse-nyc-taxi/bronze/`, and triggers Airflow DAG.
 -   **Bronze Layer:** Store raw data in
     `s3://lakehouse-nyc-taxi/bronze/`, partitioned by year and month.
 -   **Silver Layer:** Clean and enrich data in `job_silver.py`, adding
@@ -93,7 +92,6 @@ pipeline:
 -   **IAM Role:** `GlueNYCTaxiRole` with S3, Glue, Lambda, and
     CloudWatch permissions.
 -   **S3 Bucket:** `lakehouse-nyc-taxi` for data;
-    `aws-glue-assets-588297155433-us-east-1` for scripts.
 -   **Airflow:** `aws_default` connection in `us-east-1`.
 -   **Python:** 3.x for Glue and Lambda.
 -   **Dependencies:** PySpark, boto3 (Glue 5.0),
@@ -108,14 +106,13 @@ pipeline:
 
 -   Create `s3://lakehouse-nyc-taxi/` with subfolders: `bronze/`,
     `silver/yellow_taxi/`, `gold/`.
--   Upload `job_silver.py` and `job_gold.py` to
-    `s3://aws-glue-assets-588297155433-us-east-1/scripts/`.
+-   Upload `job_silver.py` and `job_gold.py` s3.
 
 ### Glue Configuration:
 
 -   Create Glue jobs: `job_silver` and `job_gold` (Glue 5.0, Python 3,
     WorkerType G.1X, 2 workers).
--   Set IAM role: `arn:aws:iam::588297155433:role/GlueNYCTaxiRole`.
+-   Set IAM role.
 -   Create crawlers: `NYCTaxiBronzeCrawler`, `NYCTaxiSilverCrawler`,
     `NYCTaxiGoldCrawler`.
 
@@ -140,7 +137,7 @@ pipeline:
     docker-compose up -d
     ```
 
-3.  **Access Airflow UI:** http://localhost:8080 (login: admin/admin).
+3.  **Access Airflow UI:** http://localhost:8080.
 
 4.  **Upload DAG:**
 
